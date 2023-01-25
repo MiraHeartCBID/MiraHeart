@@ -1,0 +1,106 @@
+#include <Wire.h>
+#include "MAX30105.h"
+MAX30105 particleSensor1; // initialize MAX30102 with I2C
+MAX30105 particleSensor2;
+#define TCAADDR 0x70
+
+void tcaselect (uint8_t i) {
+  if (i > 7) return;
+  Wire.beginTransmission(TCAADDR);
+  Wire.write(1 << i);
+  Wire.endTransmission();
+}
+
+void setup()
+{
+  Serial.begin(115200);
+  while(!Serial); //We must wait for Teensy to come online
+  delay(100);
+  Serial.println("");
+  Serial.println("MAX30102");
+  delay(100);
+  Wire.begin();
+  // Initialize sensor
+  tcaselect(2);
+  //particleSensor1.parameter.communication = 0;
+  //particleSensor1.parameter.I2CAddress = 0x57;              //Choose I2C Address
+  if (particleSensor1.begin(Wire, I2C_SPEED_FAST) == false) //Use default I2C port, 400kHz speed
+  {
+    Serial.println("MAX30105_1 was not found. Please check wiring/power. ");
+    while (1);
+  }
+  byte ledBrightness = 70; //Options: 0=Off to 255=50mA
+  byte sampleAverage = 1; //Options: 1, 2, 4, 8, 16, 32
+  byte ledMode = 2; //Options: 1 = Red only, 2 = Red + IR, 3 = Red + IR + Green
+  int sampleRate = 400; //Options: 50, 100, 200, 400, 800, 1000, 1600, 3200
+  int pulseWidth = 69; //Options: 69, 118, 215, 411
+  int adcRange = 16384; //Options: 2048, 4096, 8192, 16384
+  particleSensor1.setup(ledBrightness, sampleAverage, ledMode, sampleRate, pulseWidth, adcRange); //Configure sensor with these settings
+
+
+  tcaselect(3);
+  //particleSensor2.parameter.communication = 0;
+  //particleSensor2.parameter.I2CAddress = 0x57;        
+if (particleSensor2.begin(Wire, I2C_SPEED_FAST) == false) //Use default I2C port, 400kHz speed
+  {
+    Serial.println("MAX30105_2 was not found. Please check wiring/power. ");
+    while (1);
+  }
+
+  byte ledBrightness2 = 70; //Options: 0=Off to 255=50mA
+  byte sampleAverage2 = 1; //Options: 1, 2, 4, 8, 16, 32
+  byte ledMode2 = 2; //Options: 1 = Red only, 2 = Red + IR, 3 = Red + IR + Green
+  int sampleRate2 = 400; //Options: 50, 100, 200, 400, 800, 1000, 1600, 3200
+  int pulseWidth2 = 69; //Options: 69, 118, 215, 411
+  int adcRange2 = 16384; //Options: 2048, 4096, 8192, 16384
+  particleSensor2.setup(ledBrightness2, sampleAverage2, ledMode2, sampleRate2, pulseWidth2, adcRange2); //Configure sensor with these settings
+}
+
+void loop() {
+  //particleSensor1.check(); //Check the sensor
+ // particleSensor2.check(); 
+  //while (particleSensor1.available()) {
+      // read stored IR
+      tcaselect(2);
+      Serial.print(millis());
+      Serial.print(",");
+      tcaselect(2);
+      Serial.print(particleSensor1.getIR());
+      Serial.print(",");
+      // read stored red
+      tcaselect(2);
+      Serial.println(particleSensor1.getRed());
+      // read next set of samples
+      particleSensor1.nextSample();    
+  
+  //while (particleSensor2.available()) {
+      // read stored IR
+      tcaselect(3);
+      Serial.print(millis());
+      Serial.print(",");
+      tcaselect(3);
+      Serial.print(particleSensor2.getIR());
+      Serial.print(",");
+      // read stored red
+      tcaselect(3);
+      Serial.println(particleSensor2.getRed());
+      // read next set of samples
+      particleSensor2.nextSample(); 
+  
+  
+}
+
+/*
+void loop() {
+  tcaselect(0);
+	Serial.print(particleSensor1.getRed());
+	Serial.print(", ");
+	Serial.print(particleSensor1.getIR());
+  Serial.print(", ");
+  tcaselect(1);
+  Serial.print(particleSensor2.getRed());
+	Serial.print(", ");
+	Serial.println(particleSensor2.getIR());
+
+}
+*/
