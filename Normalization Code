@@ -1,0 +1,63 @@
+!pip install pyserial
+!pip install scipy
+!pip install sklearn
+!pip install pandas
+import pandas as pd
+import sklearn 
+from sklearn import preprocessing
+import scipy
+import serial,time,csv,os
+import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib import cm
+from itertools import zip_longest
+
+
+url = "https://raw.githubusercontent.com/MiraHeartCBID/MiraHeart/Testing-CSV/01_25_23_D2_sam.csv"
+df = pd.read_csv(url)
+red_unnormalized_1 = df.iloc[:,1]
+red_unnormalized_2 = df.iloc[:,5]
+#print(red_unnormalized_1)
+#print(red_unnormalized_2)
+red_unnormalized_1 = red_unnormalized_1.dropna()
+red_unnormalized_2 = red_unnormalized_2.dropna()
+#print(red_unnormalized_1)
+#print(red_unnormalized_2)
+
+
+red_vals_normalize1 = []
+red_vals_normalize2 = []
+
+smoothing_size = 20 
+new = np.ones((smoothing_size,))
+red_unnormalized_1 = np.convolve(red_unnormalized_1,new,'same')/smoothing_size
+red_unnormalized_1 = np.append(np.repeat(red_unnormalized_1[int(smoothing_size/2)],int(smoothing_size/2)),red_unnormalized_1[int(smoothing_size/2):-int(smoothing_size/2)])
+red_unnormalized_1 = np.append(red_unnormalized_1,np.repeat(red_unnormalized_1[-int(smoothing_size/2)],int(smoothing_size/2)))
+red_vals_normalize1 = sklearn.preprocessing.normalize([red_unnormalized_1])
+
+red_unnormalized_2 = np.convolve(red_unnormalized_2,new,'same')/smoothing_size
+red_unnormalized_2 = np.append(np.repeat(red_unnormalized_2[int(smoothing_size/2)],int(smoothing_size/2)),red_unnormalized_2[int(smoothing_size/2):-int(smoothing_size/2)])
+red_unnormalized_2 = np.append(red_unnormalized_2,np.repeat(red_unnormalized_2[-int(smoothing_size/2)],int(smoothing_size/2)))
+red_vals_normalize2 = sklearn.preprocessing.normalize([red_unnormalized_2])
+
+
+red_vals_normalize1 = red_vals_normalize1.tolist()
+red_vals_normalize2 = red_vals_normalize2.tolist()
+
+
+print(type(red_vals_normalize1))
+
+print(red_vals_normalize1)
+print(red_vals_normalize2)
+
+#saving to csv
+d = [red_vals_normalize1[0],red_vals_normalize2[0]]
+with open(r'01_25_23_D2_sam_normalized.csv','a') as f:
+    writer = csv.writer(f)
+    for values in zip_longest(*d):
+        writer.writerow(values)   
+
+#with open('01_25_23_D1_bhavya.csv', mode ='r')as file:
+    #csvFile = csv.reader(file)
+    #red_vals = 
+    
